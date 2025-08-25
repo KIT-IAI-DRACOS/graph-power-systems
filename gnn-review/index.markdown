@@ -20,7 +20,7 @@ Welcome to our comprehensive review of Graph Neural Networks (GNNs) applications
 
 ## Recent Posts
 
-- [All Papers - DRACOS GNN Review](/papers/review/gnn/2025/01/27/all-papers.html) - Complete list of reviewed papers with metadata
+- [All Papers - DRACOS GNN Review](/all-papers.html) - Complete list of reviewed papers with metadata
 
 ## About This Review
 
