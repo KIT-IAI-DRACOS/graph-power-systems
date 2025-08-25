@@ -105,6 +105,21 @@ def csv_to_html(csv_file, output_file):
             font-size: 0.8rem;
             margin: 2px;
         }}
+        .search-btn {{
+            display: inline-block;
+            background: #007bff;
+            color: white;
+            padding: 6px 12px;
+            border-radius: 4px;
+            text-decoration: none;
+            font-size: 0.8rem;
+            transition: background-color 0.2s;
+        }}
+        .search-btn:hover {{
+            background: #0056b3;
+            color: white;
+            text-decoration: none;
+        }}
         .search-container {{
             margin: 1rem 0;
         }}
@@ -190,6 +205,7 @@ def csv_to_html(csv_file, output_file):
                     <th>Year</th>
                     <th>Citations</th>
                     <th>Categories</th>
+                    <th>Search</th>
                 </tr>
             </thead>
             <tbody>
@@ -198,12 +214,18 @@ def csv_to_html(csv_file, output_file):
     # Add table rows
     for paper in papers:
         categories_html = ''.join(f'<span class="category-tag">{cat.strip()}</span>' for cat in paper['Categories'].split(';') if cat.strip())
+        
+        # Create search query for the paper
+        search_query = f"{paper['Title']} {paper['Authors']} {paper['Year']}"
+        search_url = f"https://www.google.com/search?q={search_query.replace(' ', '+')}"
+        
         html_content += f"""                <tr class="paper-row" data-year="{paper['Year']}" data-title="{paper['Title'].lower()}" data-authors="{paper['Authors'].lower()}" data-categories="{paper['Categories'].lower()}">
                     <td>{paper['Title']}</td>
                     <td>{paper['Authors']}</td>
                     <td>{paper['Year']}</td>
                     <td>{paper['Citations']}</td>
                     <td>{categories_html}</td>
+                    <td><a href="{search_url}" target="_blank" class="search-btn">🔍 Search</a></td>
                 </tr>
 """
     
