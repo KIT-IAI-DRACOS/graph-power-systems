@@ -10,6 +10,7 @@ categories: papers review gnn
 <div class="construction-banner">
   <p><strong>🚧 Companion Web Page Under Construction</strong></p>
   <p>This page is being developed to accompany our research review. Features and content may be updated as development continues.</p>
+  <p><em>Note: Papers data will be displayed once the CSV file is properly loaded.</em></p>
 </div>
 
 This page contains all papers from our DRACOS GNN study, focusing on Graph Neural Networks applications in power systems. The papers are presented with their titles, authors, publication year, and citation counts.
@@ -19,26 +20,48 @@ This page contains all papers from our DRACOS GNN study, focusing on Graph Neura
     <h3>Filter by Year</h3>
     <div class="year-filters">
       <label><input type="checkbox" class="year-filter" value="all" checked> All Years</label>
-      {% for year in site.data.papers_by_year %}
-      <label><input type="checkbox" class="year-filter" value="{{ year[0] }}" checked> {{ year[0] }}</label>
-      {% endfor %}
+      {% if site.data.papers_by_year and site.data.papers_by_year.keys.size > 0 %}
+        {% for year in site.data.papers_by_year %}
+        <label><input type="checkbox" class="year-filter" value="{{ year[0] }}" checked> {{ year[0] }}</label>
+        {% endfor %}
+      {% endif %}
     </div>
     
     <h3>Filter by Category</h3>
     <div class="category-filters">
       <label><input type="checkbox" class="category-filter" value="all" checked> All Categories</label>
-      {% for category in site.data.all_categories %}
-      <label><input type="checkbox" class="category-filter" value="{{ category }}" checked> {{ category }}</label>
-      {% endfor %}
+      {% if site.data.all_categories and site.data.all_categories.size > 0 %}
+        {% for category in site.data.all_categories %}
+        <label><input type="checkbox" class="category-filter" value="{{ category }}" checked> {{ category }}</label>
+        {% endfor %}
+      {% endif %}
     </div>
     
     <h3>Quick Stats</h3>
     <div class="stats">
-      <p><strong>Total Papers:</strong> {{ site.data.papers.size }}</p>
-      <p><strong>Years Covered:</strong> {{ site.data.papers_by_year.keys.min }} - {{ site.data.papers_by_year.keys.max }}</p>
-      <p><strong>Categories:</strong> {{ site.data.all_categories.size }}</p>
-      <p><strong>Total Citations:</strong> {{ site.data.papers | map: 'citations' | map: 'to_i' | sum }}</p>
-      <p><strong>Avg Citations:</strong> {{ site.data.papers | map: 'citations' | map: 'to_i' | sum | divided_by: site.data.papers.size | round: 1 }}</p>
+      <p><strong>Total Papers:</strong> {{ site.data.papers.size | default: 0 }}</p>
+      <p><strong>Years Covered:</strong> 
+        {% if site.data.papers_by_year and site.data.papers_by_year.keys.size > 0 %}
+          {{ site.data.papers_by_year.keys.min }} - {{ site.data.papers_by_year.keys.max }}
+        {% else %}
+          N/A
+        {% endif %}
+      </p>
+      <p><strong>Categories:</strong> {{ site.data.all_categories.size | default: 0 }}</p>
+      <p><strong>Total Citations:</strong> 
+        {% if site.data.papers and site.data.papers.size > 0 %}
+          {{ site.data.papers | map: 'citations' | map: 'to_i' | sum }}
+        {% else %}
+          0
+        {% endif %}
+      </p>
+      <p><strong>Avg Citations:</strong> 
+        {% if site.data.papers and site.data.papers.size > 0 %}
+          {{ site.data.papers | map: 'citations' | map: 'to_i' | sum | divided_by: site.data.papers.size | round: 1 }}
+        {% else %}
+          0
+        {% endif %}
+      </p>
     </div>
   </div>
 
@@ -48,7 +71,7 @@ This page contains all papers from our DRACOS GNN study, focusing on Graph Neura
     <div class="search-container">
       <input type="text" id="searchInput" placeholder="Search papers by title or authors..." class="search-input">
       <div class="search-stats">
-        <span id="visibleCount">{{ site.data.papers.size }}</span> of {{ site.data.papers.size }} papers shown
+        <span id="visibleCount">{{ site.data.papers.size | default: 0 }}</span> of {{ site.data.papers.size | default: 0 }} papers shown
       </div>
     </div>
     
@@ -64,43 +87,58 @@ This page contains all papers from our DRACOS GNN study, focusing on Graph Neura
           </tr>
         </thead>
         <tbody>
-          {% for paper in site.data.papers_with_categories %}
-          <tr class="paper-row" data-year="{{ paper.year }}" data-title="{{ paper.title | downcase }}" data-authors="{{ paper.authors | downcase }}" data-categories="{{ paper.category_list | join: ' ' | downcase }}">
-            <td>{{ paper.title }}</td>
-            <td>{{ paper.authors }}</td>
-            <td>{{ paper.year }}</td>
-            <td>{{ paper.citations }}</td>
-            <td>
-              {% for category in paper.category_list %}
-              <span class="category-tag">{{ category }}</span>
-              {% endfor %}
-            </td>
-          </tr>
-          {% endfor %}
+          {% if site.data.papers_with_categories and site.data.papers_with_categories.size > 0 %}
+            {% for paper in site.data.papers_with_categories %}
+            <tr class="paper-row" data-year="{{ paper.year }}" data-title="{{ paper.title | downcase }}" data-authors="{{ paper.authors | downcase }}" data-categories="{{ paper.category_list | join: ' ' | downcase }}">
+              <td>{{ paper.title }}</td>
+              <td>{{ paper.authors }}</td>
+              <td>{{ paper.year }}</td>
+              <td>{{ paper.citations }}</td>
+              <td>
+                {% for category in paper.category_list %}
+                <span class="category-tag">{{ category }}</span>
+                {% endfor %}
+              </td>
+            </tr>
+            {% endfor %}
+          {% else %}
+            <tr>
+              <td colspan="5" style="text-align: center; padding: 2rem; color: #6c757d;">
+                <em>Papers data is being loaded...</em>
+              </td>
+            </tr>
+          {% endif %}
         </tbody>
       </table>
     </div>
 
     <h2>Papers by Category</h2>
-    {% for category in site.data.all_categories %}
-    <div class="category-section" data-category="{{ category }}">
-      <h3>{{ category }}</h3>
-      <p class="category-stats">{{ site.data.papers_by_category[category].size }} papers</p>
-      {% for paper in site.data.papers_by_category[category] %}
-      <div class="paper-item">
-        <h4>{{ paper.title }}</h4>
-        <p><strong>Authors:</strong> {{ paper.authors }}</p>
-        <p><strong>Year:</strong> {{ paper.year }}</p>
-        <p><strong>Citations:</strong> {{ paper.citations }}</p>
-        <p><strong>Categories:</strong> 
-          {% for cat in paper.category_list %}
-          <span class="category-tag">{{ cat }}</span>
-          {% endfor %}
-        </p>
+    {% if site.data.all_categories and site.data.all_categories.size > 0 %}
+      {% for category in site.data.all_categories %}
+      <div class="category-section" data-category="{{ category }}">
+        <h3>{{ category }}</h3>
+        <p class="category-stats">{{ site.data.papers_by_category[category].size }} papers</p>
+        {% for paper in site.data.papers_by_category[category] %}
+        <div class="paper-item">
+          <h4>{{ paper.title }}</h4>
+          <p><strong>Authors:</strong> {{ paper.authors }}</p>
+          <p><strong>Year:</strong> {{ paper.year }}</p>
+          <p><strong>Citations:</strong> {{ paper.citations }}</p>
+          <p><strong>Categories:</strong> 
+            {% for cat in paper.category_list %}
+            <span class="category-tag">{{ cat }}</span>
+            {% endfor %}
+          </p>
+        </div>
+        {% endfor %}
       </div>
       {% endfor %}
-    </div>
-    {% endfor %}
+    {% else %}
+      <div class="category-section">
+        <h3>Categories</h3>
+        <p class="category-stats">Categories are being loaded...</p>
+      </div>
+    {% endif %}
 
     <h2>Interactive Visualizations</h2>
     <div class="charts-container">
@@ -127,23 +165,30 @@ This page contains all papers from our DRACOS GNN study, focusing on Graph Neura
     </div>
 
     <h2>Papers by Year</h2>
-    {% for year in site.data.papers_by_year %}
-    <div class="year-section" data-year="{{ year[0] }}">
-      <h3>{{ year[0] }}</h3>
-      {% for paper in year[1] %}
-      <div class="paper-item">
-        <h4>{{ paper.title }}</h4>
-        <p><strong>Authors:</strong> {{ paper.authors }}</p>
-        <p><strong>Citations:</strong> {{ paper.citations }}</p>
-        <p><strong>Categories:</strong> 
-          {% for cat in paper.category_list %}
-          <span class="category-tag">{{ cat }}</span>
-          {% endfor %}
-        </p>
+    {% if site.data.papers_by_year and site.data.papers_by_year.keys.size > 0 %}
+      {% for year in site.data.papers_by_year %}
+      <div class="year-section" data-year="{{ year[0] }}">
+        <h3>{{ year[0] }}</h3>
+        {% for paper in year[1] %}
+        <div class="paper-item">
+          <h4>{{ paper.title }}</h4>
+          <p><strong>Authors:</strong> {{ paper.authors }}</p>
+          <p><strong>Citations:</strong> {{ paper.citations }}</p>
+          <p><strong>Categories:</strong> 
+            {% for cat in paper.category_list %}
+            <span class="category-tag">{{ cat }}</span>
+            {% endfor %}
+          </p>
+        </div>
+        {% endfor %}
       </div>
       {% endfor %}
-    </div>
-    {% endfor %}
+    {% else %}
+      <div class="year-section">
+        <h3>Years</h3>
+        <p>Papers by year are being loaded...</p>
+      </div>
+    {% endif %}
   </div>
 </div>
 
