@@ -1,30 +1,10 @@
-# Welcome to My Review Paper Companion Site
-This is the homepage of the companion site for my review paper.
+# Graph Neural Networks in Power Systems - Research Papers
 
-# Supplementary Materials: [Title of Review Paper]
+🚧 **This page is under construction**
 
-This repository hosts the supplementary materials for our review paper:
+## Papers Database
 
-> "**[Full Paper Title]**"  
-> by [Author Names]  
-> Submitted to [Journal Name], [Year]
+**Visit our interactive papers database:** [https://kit-iai-dracos.github.io/graph-power-systems/gnn-review/](https://kit-iai-dracos.github.io/graph-power-systems/gnn-review/)
 
-## Contents
-
-- 📊 **Full paper database** in `data/`
-- 📈 **Statistical analyses** in `scripts/`
-- 🌐 **Interactive overview website** (via GitHub Pages): [link]
-- 📄 **Metadata schema** explaining each column
-
-## How to Cite
-
-If you use this data or code, please cite our paper:
-
-```bibtex
-@article{yourcitation2025,
-  title={...},
-  author={...},
-  journal={...},
-  year={2025}
-}
+This repository contains our comprehensive review of Graph Neural Networks applications in power systems, featuring 570+ papers with interactive filtering and search capabilities.
 
