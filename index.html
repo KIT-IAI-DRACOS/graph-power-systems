@@ -10,6 +10,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 
     <style>
+        /* ... (Your CSS remains the same) ... */
         :root {
             --primary: #2c3e50;
             --secondary: #34495e;
@@ -59,27 +60,30 @@
         .paper-link { font-weight: bold; color: var(--accent); text-decoration: none; background: #eef2f7; padding: 5px 10px; border-radius: 4px; }
         .paper-link:hover { background: #dfe6ef; }
 
-        /* Upload Box */
+        /* Upload Box - MODIFIED: Now acts as a loading message */
         .upload-container {
             background: #fff;
-            border: 2px dashed #3498db;
+            border: 2px solid #ccc; /* Changed from dashed blue to solid gray for loading state */
             border-radius: 8px;
             padding: 40px;
             text-align: center;
             margin-bottom: 30px;
             transition: all 0.3s;
         }
-        .upload-container:hover { background: #f0f8ff; }
-        .upload-btn {
-            background: var(--accent);
-            color: white;
-            padding: 10px 20px;
-            border-radius: 5px;
-            cursor: pointer;
-            font-weight: bold;
-            display: inline-block;
+        .upload-container h3 { margin: 0; color: var(--primary); }
+        .upload-container p { color: #666; }
+        .spinner {
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            border-left-color: var(--accent);
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 10px auto 0;
         }
-        .upload-text { margin-bottom: 15px; color: #666; }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
 
         /* Dashboard */
         .dashboard {
@@ -244,17 +248,13 @@
         <a href="#" class="paper-link">Check out paper: Link TBA</a>
     </header>
 
-    <div class="upload-container" id="uploadSection">
+    <div class="upload-container" id="loadingSection">
         <div class="upload-text">
-            <h3><i class="fas fa-file-csv"></i> Load Data</h3>
-            <p>Please upload the <strong>DRACOS.csv</strong> file to view the dashboard.</p>
+            <h3><i class="fas fa-spinner fa-pulse"></i> Loading Data...</h3>
+            <div class="spinner"></div>
+            <p>Attempting to load **DRACOS.csv** from the repository.</p>
         </div>
-        <label class="upload-btn">
-            Select CSV File
-            <input type="file" id="csvFileInput" accept=".csv" style="display: none;">
-        </label>
     </div>
-
     <section class="about-section">
         <details>
             <summary><i class="fas fa-info-circle"></i> About the Categories (Legend)</summary>
@@ -330,6 +330,9 @@
 
 <script>
     // --- Config ---
+    // The relative path to your CSV file. This works because it is in the same directory as index.html
+    const CSV_URL = './DRACOS.csv'; 
+
     const TAG_MAP = {
         '#forecasting': 'Forecasting',
         '#grid-analysis': 'Grid Topology & State',
@@ -389,21 +392,37 @@
         return match ? parseInt(match[1]) : -1;
     }
 
-    // --- Core Processing ---
-
-    document.getElementById('csvFileInput').addEventListener('change', function(e) {
-        const file = e.target.files[0];
-        if (!file) return;
-
-        Papa.parse(file, {
+    // --- Core Processing (MODIFIED: Replaced file input with auto-load function) ---
+    
+    // NEW FUNCTION: Automatically loads the CSV from the URL
+    function autoLoadCSV() {
+        const loadingSection = document.getElementById('loadingSection');
+        if (loadingSection) {
+             loadingSection.innerHTML = `
+                <div class="upload-text">
+                    <h3><i class="fas fa-spinner fa-pulse"></i> Loading Data...</h3>
+                    <div class="spinner"></div>
+                    <p>Attempting to load <strong>DRACOS.csv</strong> from the repository.</p>
+                </div>`;
+        }
+        
+        Papa.parse(CSV_URL, {
+            download: true, // Tells PapaParse to fetch the file from the network
             header: true,
             skipEmptyLines: true,
             complete: processData,
             error: function(err) {
-                alert("Error parsing CSV: " + err.message);
+                if (loadingSection) {
+                    loadingSection.innerHTML = `
+                        <div class="upload-text" style="color: #e74c3c; border-color: #e74c3c;">
+                            <h3><i class="fas fa-times-circle"></i> Error Loading Data</h3>
+                            <p>Could not load **DRACOS.csv**. Please ensure the file is named correctly and is in the same directory as this index.html file, or check your browser's console for network errors.</p>
+                            <p>Error: ${err.message}</p>
+                        </div>`;
+                }
             }
         });
-    });
+    }
 
     function processData(results) {
         const rawData = results.data;
@@ -437,8 +456,8 @@
 
         allPapers.sort((a, b) => b.year - a.year);
 
-        // Hide upload section, show dashboard
-        document.getElementById('uploadSection').style.display = 'none';
+        // Hide upload/loading section, show dashboard
+        document.getElementById('loadingSection').style.display = 'none';
         document.getElementById('dashboardSection').style.display = 'grid';
         document.getElementById('controlsSection').style.display = 'block';
 
@@ -600,6 +619,8 @@
         charts.bar.render();
     }
 
+    // --- Auto-Run when the page is fully loaded ---
+    document.addEventListener('DOMContentLoaded', autoLoadCSV);
 </script>
 
 </body>
