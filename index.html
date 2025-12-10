@@ -1,0 +1,606 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GML in Power Systems: Literature Review</title>
+    
+    <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+    <style>
+        :root {
+            --primary: #2c3e50;
+            --secondary: #34495e;
+            --accent: #3498db;
+            --bg: #f8f9fa;
+            --card-bg: #ffffff;
+            --border: #e0e0e0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg);
+            color: #333;
+            margin: 0;
+            padding: 0;
+            line-height: 1.6;
+        }
+
+        /* Top Notification Bar */
+        .top-bar {
+            background-color: #e8f4f8;
+            color: var(--primary);
+            text-align: center;
+            padding: 10px;
+            font-size: 0.9em;
+            border-bottom: 1px solid #d0e1e8;
+        }
+        .top-bar a { color: var(--accent); font-weight: bold; text-decoration: none; }
+        .top-bar a:hover { text-decoration: underline; }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* Header */
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 20px;
+        }
+        
+        h1 { color: var(--primary); margin-bottom: 5px; }
+        .subtitle { color: #666; font-size: 1.1em; margin-bottom: 10px; }
+        .paper-link { font-weight: bold; color: var(--accent); text-decoration: none; background: #eef2f7; padding: 5px 10px; border-radius: 4px; }
+        .paper-link:hover { background: #dfe6ef; }
+
+        /* Upload Box */
+        .upload-container {
+            background: #fff;
+            border: 2px dashed #3498db;
+            border-radius: 8px;
+            padding: 40px;
+            text-align: center;
+            margin-bottom: 30px;
+            transition: all 0.3s;
+        }
+        .upload-container:hover { background: #f0f8ff; }
+        .upload-btn {
+            background: var(--accent);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            display: inline-block;
+        }
+        .upload-text { margin-bottom: 15px; color: #666; }
+
+        /* Dashboard */
+        .dashboard {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 30px;
+            display: none; /* Hidden until data loaded */
+        }
+
+        .chart-container {
+            background: var(--card-bg);
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            border: 1px solid var(--border);
+            min-height: 350px;
+            position: relative;
+        }
+        
+        .chart-title {
+            font-weight: bold;
+            color: var(--primary);
+            margin-bottom: 10px;
+            text-align: center;
+        }
+
+        /* About Section */
+        .about-section {
+            background: var(--card-bg);
+            padding: 15px 20px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            margin-bottom: 30px;
+        }
+        
+        details summary { cursor: pointer; font-weight: bold; color: var(--primary); }
+        .tag-desc {
+            margin-top: 15px;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 10px;
+        }
+        .tag-card { background: #f9f9f9; padding: 10px; border-radius: 5px; font-size: 0.85em; border-left: 4px solid #ccc; }
+        .tag-card strong { display: block; margin-bottom: 3px; }
+
+        /* Controls & Filters */
+        .controls-panel {
+            background: var(--card-bg);
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            margin-bottom: 20px;
+            border: 1px solid var(--border);
+            display: none; /* Hidden until data loaded */
+        }
+
+        .search-sort-row {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+
+        input[type="text"], select {
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 1em;
+        }
+        input[type="text"] { flex-grow: 1; }
+
+        /* Filter Chips */
+        .filter-group { margin-bottom: 15px; }
+        .filter-label { font-size: 0.9em; font-weight: bold; color: #666; margin-bottom: 5px; display: block; }
+        .chips-container { display: flex; flex-wrap: wrap; gap: 8px; }
+        
+        .chip {
+            padding: 5px 12px;
+            border-radius: 15px;
+            border: 1px solid #ccc;
+            background: #fff;
+            cursor: pointer;
+            font-size: 0.85em;
+            user-select: none;
+            transition: all 0.2s;
+        }
+        .chip:hover { background: #f0f0f0; }
+        .chip.active { background: var(--primary); color: white; border-color: var(--primary); }
+        
+        /* Category specific colors */
+        .chip.cat-forecasting.active { background-color: #3498db; border-color: #3498db; }
+        .chip.cat-analysis.active { background-color: #2ecc71; border-color: #2ecc71; }
+        .chip.cat-opt.active { background-color: #f1c40f; border-color: #f1c40f; color: #333; }
+        .chip.cat-faults.active { background-color: #e74c3c; border-color: #e74c3c; }
+        .chip.cat-cyber.active { background-color: #9b59b6; border-color: #9b59b6; }
+        .chip.cat-data.active { background-color: #1abc9c; border-color: #1abc9c; }
+        .chip.cat-found.active { background-color: #7f8c8d; border-color: #7f8c8d; }
+        .chip.cat-emerging.active { background-color: #e67e22; border-color: #e67e22; }
+
+        /* Paper List */
+        .paper-list { display: flex; flex-direction: column; gap: 15px; }
+
+        .paper-item {
+            background: var(--card-bg);
+            padding: 15px 20px;
+            border-radius: 8px;
+            border-left: 5px solid #ccc; 
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            transition: transform 0.2s;
+        }
+        .paper-item:hover { transform: translateY(-2px); box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+
+        .paper-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
+        .paper-title { font-size: 1.15em; font-weight: 600; color: var(--primary); text-decoration: none; }
+        .paper-title:hover { text-decoration: underline; }
+
+        .paper-meta { font-size: 0.9em; color: #666; margin: 5px 0 10px 0; }
+        
+        .citation-badge {
+            font-size: 0.8em;
+            background: #fff3cd;
+            color: #856404;
+            padding: 2px 8px;
+            border-radius: 4px;
+            border: 1px solid #ffeeba;
+            margin-left: 10px;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .paper-tag {
+            display: inline-block;
+            color: #fff;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 0.8em;
+            font-weight: 500;
+        }
+
+        @media (max-width: 768px) {
+            .dashboard { grid-template-columns: 1fr; }
+            .search-sort-row { flex-direction: column; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="top-bar">
+    Did you publish something? Is your paper wrongly categorized? 
+    <a href="https://github.com/KIT-IAI-DRACOS/graph-power-systems/issues/new" target="_blank">
+        <i class="fab fa-github"></i> Create a GitHub Issue
+    </a>
+</div>
+
+<div class="container">
+    
+    <header>
+        <h1>Graph Machine Learning in Power Systems</h1>
+        <div class="subtitle">A curated literature review and resource list</div>
+        <a href="#" class="paper-link">Check out paper: Link TBA</a>
+    </header>
+
+    <div class="upload-container" id="uploadSection">
+        <div class="upload-text">
+            <h3><i class="fas fa-file-csv"></i> Load Data</h3>
+            <p>Please upload the <strong>DRACOS.csv</strong> file to view the dashboard.</p>
+        </div>
+        <label class="upload-btn">
+            Select CSV File
+            <input type="file" id="csvFileInput" accept=".csv" style="display: none;">
+        </label>
+    </div>
+
+    <section class="about-section">
+        <details>
+            <summary><i class="fas fa-info-circle"></i> About the Categories (Legend)</summary>
+            <div class="tag-desc">
+                <div class="tag-card" style="border-left-color: #3498db;">
+                    <strong>Forecasting</strong> Input prediction (Load, Wind, PV, Price).
+                </div>
+                <div class="tag-card" style="border-left-color: #2ecc71;">
+                    <strong>Grid Topology & State</strong> Physics emulation, Power Flow, State Estimation.
+                </div>
+                <div class="tag-card" style="border-left-color: #f1c40f;">
+                    <strong>Optimization & Control</strong> OPF, Voltage Control, Unit Commitment.
+                </div>
+                <div class="tag-card" style="border-left-color: #e74c3c;">
+                    <strong>Stability & Reliability</strong> Faults, Transient stability, Cascading failures.
+                </div>
+                <div class="tag-card" style="border-left-color: #9b59b6;">
+                    <strong>Cybersecurity</strong> FDIA, Theft detection, Cyber-physical attacks.
+                </div>
+                <div class="tag-card" style="border-left-color: #1abc9c;">
+                    <strong>Data Management</strong> Imputation, Synthetic data, Digital Twins.
+                </div>
+                <div class="tag-card" style="border-left-color: #7f8c8d;">
+                    <strong>Foundational</strong> Surveys, Benchmarks, Datasets, Theory.
+                </div>
+                <div class="tag-card" style="border-left-color: #e67e22;">
+                    <strong>Emerging Apps</strong> Markets, Planning, Asset Management.
+                </div>
+            </div>
+        </details>
+    </section>
+
+    <div class="dashboard" id="dashboardSection">
+        <div class="chart-container">
+            <div class="chart-title">Distribution by Category</div>
+            <div id="categoryChart"></div>
+        </div>
+        <div class="chart-container">
+            <div class="chart-title">Publications per Year</div>
+            <div id="yearChart"></div>
+        </div>
+    </div>
+
+    <div class="controls-panel" id="controlsSection">
+        
+        <div class="search-sort-row">
+            <input type="text" id="searchInput" placeholder="Search by title, author, or keywords...">
+            <select id="sortSelect">
+                <option value="year-desc">Newest First</option>
+                <option value="year-asc">Oldest First</option>
+                <option value="citations">Most Cited</option>
+            </select>
+        </div>
+
+        <div class="filter-group">
+            <span class="filter-label">Filter by Category (Select multiple):</span>
+            <div class="chips-container" id="categoryChips"></div>
+        </div>
+
+        <div class="filter-group">
+            <span class="filter-label">Filter by Year (Select multiple):</span>
+            <div class="chips-container" id="yearChips"></div>
+        </div>
+
+        <div style="text-align: right; color: #666; font-size: 0.9em; margin-top: 10px;">
+            Showing <strong id="countDisplay">0</strong> papers
+        </div>
+    </div>
+
+    <div class="paper-list" id="paperList"></div>
+
+</div>
+
+<script>
+    // --- Config ---
+    const TAG_MAP = {
+        '#forecasting': 'Forecasting',
+        '#grid-analysis': 'Grid Topology & State',
+        '#optimization-control': 'Optimization & Control',
+        '#faults-reliability': 'Stability & Reliability',
+        '#cybersecurity': 'Cybersecurity',
+        '#data-management': 'Data Management',
+        '#survey': 'Foundational & Surveys',
+        '#datasets': 'Foundational & Surveys',
+        '#methodology': 'Foundational & Surveys',
+        '#emerging-apps': 'Emerging Apps'
+    };
+
+    const COLOR_MAP = {
+        'Forecasting': '#3498db',
+        'Grid Topology & State': '#2ecc71',
+        'Optimization & Control': '#f1c40f',
+        'Stability & Reliability': '#e74c3c',
+        'Cybersecurity': '#9b59b6',
+        'Data Management': '#1abc9c',
+        'Foundational & Surveys': '#7f8c8d',
+        'Emerging Apps': '#e67e22',
+        'Other': '#95a5a6'
+    };
+
+    const CLASS_MAP = {
+        'Forecasting': 'cat-forecasting',
+        'Grid Topology & State': 'cat-analysis',
+        'Optimization & Control': 'cat-opt',
+        'Stability & Reliability': 'cat-faults',
+        'Cybersecurity': 'cat-cyber',
+        'Data Management': 'cat-data',
+        'Foundational & Surveys': 'cat-found',
+        'Emerging Apps': 'cat-emerging'
+    };
+
+    let allPapers = [];
+    let activeCategories = new Set();
+    let activeYears = new Set();
+    let charts = { pie: null, bar: null };
+
+    // --- Helpers ---
+
+    function getCategory(manualTags) {
+        if (!manualTags) return 'Other';
+        const tags = manualTags.split(';');
+        for (let t of tags) {
+            t = t.trim();
+            if (TAG_MAP[t]) return TAG_MAP[t];
+        }
+        return 'Other';
+    }
+
+    function getCitations(extraStr) {
+        if (!extraStr) return -1;
+        const match = extraStr.match(/(\d+)\s*citations/i) || extraStr.match(/citation count\s*(\d+)/i);
+        return match ? parseInt(match[1]) : -1;
+    }
+
+    // --- Core Processing ---
+
+    document.getElementById('csvFileInput').addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        Papa.parse(file, {
+            header: true,
+            skipEmptyLines: true,
+            complete: processData,
+            error: function(err) {
+                alert("Error parsing CSV: " + err.message);
+            }
+        });
+    });
+
+    function processData(results) {
+        const rawData = results.data;
+        
+        allPapers = rawData
+            .filter(row => row['Title'] && (row['Publication Year'] || row['Date'])) 
+            .map(row => {
+                const category = getCategory(row['Manual Tags']);
+                
+                let authors = row['Author'] || "";
+                if (authors.includes(';')) authors = authors.replace(/;/g, ', ');
+                
+                let year = row['Publication Year'];
+                if (!year && row['Date']) {
+                    const match = row['Date'].match(/\d{4}/);
+                    if (match) year = match[0];
+                }
+                year = year ? parseInt(year) : 0;
+
+                return {
+                    title: row['Title'],
+                    author: authors,
+                    year: year,
+                    url: row['Url'] || '#',
+                    category: category,
+                    citations: getCitations(row['Extra']),
+                    tags: row['Manual Tags']
+                };
+            })
+            .filter(p => p.category !== 'Other' && p.year > 0);
+
+        allPapers.sort((a, b) => b.year - a.year);
+
+        // Hide upload section, show dashboard
+        document.getElementById('uploadSection').style.display = 'none';
+        document.getElementById('dashboardSection').style.display = 'grid';
+        document.getElementById('controlsSection').style.display = 'block';
+
+        initFilters();
+        updateDisplay();
+    }
+
+    function initFilters() {
+        const categories = [...new Set(allPapers.map(p => p.category))].sort();
+        const years = [...new Set(allPapers.map(p => p.year))].sort((a, b) => b - a);
+
+        const catContainer = document.getElementById('categoryChips');
+        catContainer.innerHTML = '';
+        categories.forEach(c => {
+            const chip = document.createElement('div');
+            chip.className = `chip ${CLASS_MAP[c] || ''}`;
+            chip.textContent = c;
+            chip.onclick = () => toggleFilter(c, 'category', chip);
+            catContainer.appendChild(chip);
+        });
+
+        const yearContainer = document.getElementById('yearChips');
+        yearContainer.innerHTML = '';
+        years.forEach(y => {
+            const chip = document.createElement('div');
+            chip.className = 'chip';
+            chip.textContent = y;
+            chip.onclick = () => toggleFilter(y, 'year', chip);
+            yearContainer.appendChild(chip);
+        });
+        
+        document.getElementById('searchInput').addEventListener('input', updateDisplay);
+        document.getElementById('sortSelect').addEventListener('change', updateDisplay);
+    }
+
+    function toggleFilter(value, type, element) {
+        const set = type === 'category' ? activeCategories : activeYears;
+        
+        if (set.has(value)) {
+            set.delete(value);
+            element.classList.remove('active');
+        } else {
+            set.add(value);
+            element.classList.add('active');
+        }
+        updateDisplay();
+    }
+
+    function updateDisplay() {
+        const search = document.getElementById('searchInput').value.toLowerCase();
+        const sortMode = document.getElementById('sortSelect').value;
+
+        let filtered = allPapers.filter(p => {
+            const textMatch = p.title.toLowerCase().includes(search) || 
+                              p.author.toLowerCase().includes(search);
+            const catMatch = activeCategories.size === 0 || activeCategories.has(p.category);
+            const yearMatch = activeYears.size === 0 || activeYears.has(p.year);
+            return textMatch && catMatch && yearMatch;
+        });
+
+        if (sortMode === 'citations') {
+            filtered.sort((a, b) => b.citations - a.citations);
+        } else if (sortMode === 'year-asc') {
+            filtered.sort((a, b) => a.year - b.year);
+        } else {
+            filtered.sort((a, b) => b.year - a.year);
+        }
+
+        renderList(filtered);
+        renderCharts(filtered);
+    }
+
+    function renderList(papers) {
+        const container = document.getElementById('paperList');
+        document.getElementById('countDisplay').textContent = papers.length;
+        container.innerHTML = '';
+
+        if (papers.length === 0) {
+            container.innerHTML = '<div style="padding:20px; text-align:center; color:#666;">No papers found.</div>';
+            return;
+        }
+
+        papers.forEach(p => {
+            const div = document.createElement('div');
+            div.className = 'paper-item';
+            div.style.borderLeftColor = COLOR_MAP[p.category] || '#ccc';
+
+            let citationHtml = '';
+            if (p.citations >= 0) {
+                citationHtml = `<span class="citation-badge" title="Citations"><i class="fas fa-quote-right"></i> ${p.citations}</span>`;
+            }
+
+            div.innerHTML = `
+                <div class="paper-header">
+                    <a href="${p.url}" class="paper-title" target="_blank">${p.title}</a>
+                </div>
+                <div class="paper-meta">
+                    <strong>${p.year}</strong> &bull; ${p.author}
+                    ${citationHtml}
+                </div>
+                <span class="paper-tag" style="background-color: ${COLOR_MAP[p.category]}">${p.category}</span>
+            `;
+            container.appendChild(div);
+        });
+    }
+
+    function renderCharts(papers) {
+        const catCounts = {};
+        const yearCounts = {};
+
+        papers.forEach(p => {
+            catCounts[p.category] = (catCounts[p.category] || 0) + 1;
+            yearCounts[p.year] = (yearCounts[p.year] || 0) + 1;
+        });
+
+        // Pie Chart Data
+        const sortedCats = Object.keys(catCounts).sort((a, b) => catCounts[b] - catCounts[a]);
+        const pieData = sortedCats.map(c => catCounts[c]);
+        const pieColors = sortedCats.map(c => COLOR_MAP[c]);
+
+        // Bar Chart Data
+        const sortedYears = Object.keys(yearCounts).sort();
+        const barData = sortedYears.map(y => yearCounts[y]);
+
+        // --- Render Pie ---
+        var pieOptions = {
+            series: pieData,
+            labels: sortedCats,
+            chart: {
+                type: 'pie',
+                height: 320,
+                toolbar: { show: true, tools: { download: true } }
+            },
+            colors: pieColors,
+            dataLabels: { enabled: false },
+            legend: { position: 'bottom' }
+        };
+
+        if (charts.pie) charts.pie.destroy();
+        charts.pie = new ApexCharts(document.querySelector("#categoryChart"), pieOptions);
+        charts.pie.render();
+
+        // --- Render Bar ---
+        var barOptions = {
+            series: [{ name: 'Publications', data: barData }],
+            chart: {
+                type: 'bar',
+                height: 320,
+                toolbar: { show: true, tools: { download: true } }
+            },
+            plotOptions: { bar: { borderRadius: 4, columnWidth: '50%' } },
+            dataLabels: { enabled: false },
+            xaxis: { categories: sortedYears, labels: { rotate: -45 } },
+            colors: ['#2c3e50']
+        };
+
+        if (charts.bar) charts.bar.destroy();
+        charts.bar = new ApexCharts(document.querySelector("#yearChart"), barOptions);
+        charts.bar.render();
+    }
+
+</script>
+
+</body>
+</html>
