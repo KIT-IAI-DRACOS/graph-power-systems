@@ -10,7 +10,6 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 
     <style>
-        /* ... (Your CSS remains the same) ... */
         :root {
             --primary: #2c3e50;
             --secondary: #34495e;
@@ -60,10 +59,9 @@
         .paper-link { font-weight: bold; color: var(--accent); text-decoration: none; background: #eef2f7; padding: 5px 10px; border-radius: 4px; }
         .paper-link:hover { background: #dfe6ef; }
 
-        /* Upload Box - MODIFIED: Now acts as a loading message */
         .upload-container {
             background: #fff;
-            border: 2px solid #ccc; /* Changed from dashed blue to solid gray for loading state */
+            border: 2px solid #ccc; 
             border-radius: 8px;
             padding: 40px;
             text-align: center;
@@ -392,9 +390,8 @@
         return match ? parseInt(match[1]) : -1;
     }
 
-    // --- Core Processing (MODIFIED: Replaced file input with auto-load function) ---
     
-    // NEW FUNCTION: Automatically loads the CSV from the URL
+    // Automatically loads the CSV from the URL
     function autoLoadCSV() {
         const loadingSection = document.getElementById('loadingSection');
         if (loadingSection) {
